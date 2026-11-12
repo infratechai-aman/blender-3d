@@ -1,0 +1,15 @@
+Build 2026-11-13 00:22  (v001)
+Scene: metric 1 BU = 1 m, EEVEE review renders, view transform AgX
+Plot mix: {'temple': 1, 'panchayat': 1, 'school': 1, 'house_rich': 2, 'shop': 9, 'shop_2storey': 2, 'house_common': 17, 'house_middle': 5, 'house_small': 8, 'cattle_shed': 3, 'grain_store': 1}
+Terrain: 1600 x 2000 m, 128721 verts, height -3.9..109.3 m
+River: closed water body 2132 m
+Bridge v002 placed on R04 t=124, end-offset correction 0.79 m
+Ghat placed below the temple
+Roads: UV-mapped ribbons; R04 cut for the bridge between t=88..159
+Entrance gate on R01 at t=560 m
+Buildings: 50 plots (17 hero houses, 3 tabelas, rest production-material massing)
+Fields: 271 patches from 300 candidate cells
+Vegetation: 420 tree instances (4 prototypes) + banyan + peepal
+Props: Banana 11, Bougainvillea 7, Drum 8, HandPump 4, Haystack 15, Hibiscus 10, LampPost 17, Planter 51, StreetLight 19, WallLantern 17, YardPlant 8
+Mountains + waterfall placed at (150, 1180, 33.7)
+Checkpoint: previous master archived to MASTER_WORLD_20261113_002242.blend
