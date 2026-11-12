@@ -160,10 +160,10 @@ def terrain_height(x, y):
     tx, ty = C.TEMPLE_POS
     h += 1.3 * np.exp(-((x - tx) ** 2 + (y - ty) ** 2) / 30.0 ** 2)   # temple on a slight rise
 
-    hill = smoothstep(230.0, 650.0, y)          # northern hills
+    hill = smoothstep(560.0, 1000.0, y)         # low northern foothills (v2: the rocky massif is the backdrop)
     ridge = (0.65 + 0.30 * np.sin(x * 0.009 + 0.5) + 0.12 * np.sin(x * 0.031 + 2.0)
              + 0.06 * np.sin(x * 0.07 + y * 0.05))
-    h += (hill ** 1.6) * 95.0 * ridge
+    h += (hill ** 1.6) * 38.0 * ridge
 
     d = dist_to_polyline(np.stack([x, y], 1), river_path().pts)
     k = 1.0 - smoothstep(9.0, 24.0 + 70.0 * hill, d)

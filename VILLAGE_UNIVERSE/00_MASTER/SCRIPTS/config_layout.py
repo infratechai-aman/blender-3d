@@ -132,8 +132,8 @@ CROPS = [  # name, weight
     ("mustard", 0.30), ("wheat", 0.34), ("paddy", 0.16), ("fallow", 0.20),
 ]
 
-TREE_COUNT_TARGET = 420
-TREE_MIN_SPACING = 7.0
+TREE_COUNT_TARGET = 1600
+TREE_MIN_SPACING = 5.5
 
 # --------------------------------------------------------------------------
 # Review cameras.  ground=True -> z is height above terrain (eye level).

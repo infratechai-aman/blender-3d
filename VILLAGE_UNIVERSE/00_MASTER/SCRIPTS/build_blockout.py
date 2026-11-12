@@ -258,7 +258,7 @@ def build_backdrop(M):
     ridge = (0.55 + 0.30 * np.sin(X * 0.0021 + 0.8) + 0.15 * np.sin(X * 0.0067 + Y * 0.0031)
              + 0.10 * np.sin(X * 0.017 + Y * 0.011))
     rise = np.clip(dout / 1300.0, 0.0, 1.0) ** 1.4
-    Z = base + rise * (70.0 + 260.0 * north) * ridge
+    Z = base + rise * (40.0 + 140.0 * north) * ridge
     inside = (X > x0) & (X < x1) & (Y > y0) & (Y < y1)
     edge = (X >= x0) & (X <= x1) & (Y >= y0) & (Y <= y1) & ~inside
     Z[inside] = -9.0
@@ -585,11 +585,11 @@ def scatter_trees(M, paths, plots):
         tries += 1
         r = math.hypot(x, y)
         # acceptance weight: dense along river banks and village fringe, sparse in the open fields
-        w = 0.12
-        if 24 < rd < 60:
-            w = 0.9
-        elif r < 230:
-            w = 0.55
+        w = 0.3
+        if 24 < rd < 70:
+            w = 0.95
+        elif r < 240:
+            w = 0.75
         if rng.random() > w:
             continue
         if rd < 22 or r < C.CHOWK_RADIUS + 6:

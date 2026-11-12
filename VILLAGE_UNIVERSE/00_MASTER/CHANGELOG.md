@@ -39,3 +39,10 @@
 ## 2026-11-13 - Phase 1b library approved; integration into MASTER_WORLD started
 - User approved trees, river kit (bridge v002, ghat, water), props, tabela, mountains/waterfall. Integration into the master village started (build_master_v2.py).
 
+
+## 2026-11-13 - Work paused here (handoff)
+- In progress, NOT yet built: geo.py lowers the old northern hills (amplitude 38 m, starting y=560) so the rocky massif is visible; build_blockout.py softens the outer ring and raises tree density; config_layout.py sets TREE_COUNT_TARGET 1600 / spacing 5.5. MASTER_WORLD.blend in the repo was built BEFORE these edits.
+- Next: move the mountain massif to about (149, 900, 0) so its waterfall stream meets the river, and cut the master terrain under it. Then add tree lines along roads and bunds, orchards, shrubs and grass tufts; farm detail (field bunds, machaan, tubewell, scarecrows, more haystacks); rebuild with build_master_v2.py and render with render_reviews.py --use-cycles.
+- Open question for the user: bullock approach (proper generated/supplied model vs placeholder vs wait for Phase 6).
+- Rendering tip: run only one Cycles job at a time on the 8 GB GPU (two at once crashed).
+
