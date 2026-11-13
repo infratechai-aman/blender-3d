@@ -507,7 +507,7 @@ def link_trees():
         print("[river] tree library missing, skipping context trees")
         return
     want = ["VEG_Tree_Peepal_A", "VEG_Tree_Palm_A", "VEG_Tree_Mango_A", "VEG_Tree_Neem_A", "VEG_Tree_Banyan_A_LOD1"]
-    with bpy.data.libraries.load(TREES_BLEND, link=True) as (src, dst):
+    with bpy.data.libraries.load(TREES_BLEND, link=True, relative=True) as (src, dst):
         dst.collections = [c for c in src.collections if c in want]
     lib = {c.name: c for c in dst.collections if c}
     place = [("VEG_Tree_Peepal_A", (-40, 50, 0.4), 0.3), ("VEG_Tree_Palm_A", (-30, 22, 0.3), 1.2),

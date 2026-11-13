@@ -13,7 +13,7 @@ loc = old.location.copy() if old else (0, 0, 0)
 if old:
     bpy.data.objects.remove(old, do_unlink=True)
 lib = os.path.join(root, "01_ENVIRONMENT", "LANDSCAPE", "LIB_Hero_Banyan.blend")
-with bpy.data.libraries.load(lib, link=True) as (src, dst):
+with bpy.data.libraries.load(lib, link=True, relative=True) as (src, dst):
     dst.collections = ["VEG_Tree_Banyan_Chowk_Hero"]
 e = bpy.data.objects.new("INST_Hero_Banyan_Chowk", None)
 e.instance_type = "COLLECTION"

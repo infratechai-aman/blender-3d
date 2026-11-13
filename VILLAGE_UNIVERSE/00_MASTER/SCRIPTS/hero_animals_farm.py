@@ -405,7 +405,7 @@ def main():
     stage = bpy.data.collections.new("STAGE_LINEUP")
     sc.collection.children.link(stage)
     lib = {c.name: c for c in LIB.children}
-    with bpy.data.libraries.load(BULL_BLEND, link=True) as (src, dst):
+    with bpy.data.libraries.load(BULL_BLEND, link=True, relative=True) as (src, dst):
         dst.collections = [n for n in src.collections if n == "CHR_Animal_Bullock_001"]
     if dst.collections and dst.collections[0]:
         lib["CHR_Animal_Bullock_001"] = dst.collections[0]

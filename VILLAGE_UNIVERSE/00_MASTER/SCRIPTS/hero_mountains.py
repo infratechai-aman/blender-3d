@@ -1,4 +1,4 @@
-﻿"""
+"""
 HERO BACKDROP: rocky sandstone hills with a waterfall (Amaltaspur, north of the village).
 
   blender -b --factory-startup --python hero_mountains.py -- [--render] [--quick] [--only CAM]
@@ -304,7 +304,7 @@ def main():
     # ---------------- vegetation on gentle slopes (LOD1 trees)
     if os.path.exists(TREES_BLEND):
         want = ["VEG_Tree_Neem_A_LOD1", "VEG_Tree_Mango_A_LOD1", "VEG_Tree_Peepal_A_LOD1", "VEG_Tree_Palm_A_LOD1"]
-        with bpy.data.libraries.load(TREES_BLEND, link=True) as (src, dst):
+        with bpy.data.libraries.load(TREES_BLEND, link=True, relative=True) as (src, dst):
             dst.collections = [c for c in src.collections if c in want]
         T = [c for c in dst.collections]
         vr = random.Random(11)

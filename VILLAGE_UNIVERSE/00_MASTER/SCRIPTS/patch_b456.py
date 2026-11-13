@@ -113,7 +113,7 @@ def refresh_materials():
 
 # ------------------------------------------------------------------------------------------------ B4
 def vegetation(scene, G, paths, plots, rng):
-    with bpy.data.libraries.load(LIB_B4, link=True) as (src, dst):
+    with bpy.data.libraries.load(LIB_B4, link=True, relative=True) as (src, dst):
         dst.collections = [n for n in src.collections if n in B4_NAMES]
     lib = {c.name: c for c in dst.collections if c}
     baked = {k: bake(v, k + "_BAKED") for k, v in lib.items()}

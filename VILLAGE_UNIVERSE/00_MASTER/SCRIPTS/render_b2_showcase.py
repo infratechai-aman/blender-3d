@@ -56,7 +56,7 @@ for key, (lib, cname, size, ext, inte) in SHOW.items():
     if not os.path.exists(lib):
         print("[show] missing", lib)
         continue
-    with bpy.data.libraries.load(lib, link=True) as (src, dst):
+    with bpy.data.libraries.load(lib, link=True, relative=True) as (src, dst):
         dst.collections = [cname]
     coll = dst.collections[0]
     if coll is None:

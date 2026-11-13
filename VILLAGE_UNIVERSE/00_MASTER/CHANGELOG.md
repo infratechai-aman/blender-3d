@@ -85,3 +85,22 @@
   Placement: `patch_b456.py` (also called from build_master_v2).  Not re-generated with B5 materials yet: the older
   approved libraries (house common, props, trees, river kit, mountains) - those need the RTX PC (Blender 5.3).
 - Checkpoints: 99_ARCHIVE/MASTER_WORLD_preB1/preBanyan/preB2/preB3/preB456_*.blend
+
+## 2026-11-13 - RTX PC session: portability fix, libraries refreshed, storybook day + night chowk lighting
+- PORTABILITY BUG FIXED: MASTER_WORLD linked 5 libraries by absolute laptop paths (C:\Users\<laptop>\Downloads\...):
+  B2 buildings, kaccha house, hero banyan, B3 props, B4 trees. On any other PC they were missing (shops gone, banyan
+  rendered black, no banyan lanterns at night). New `SCRIPTS/fix_library_paths.py` re-points them inside the checkout
+  (relative). Both characters linked Blender 5.2 bundled hair node assets - re-pointed to the running Blender and made
+  local. All `libraries.load(..., link=True)` calls now pass `relative=True`. Checkpoints: 99_ARCHIVE/*_prePathFix_*.
+- Older approved libraries regenerated with the B5 weathering materials on Blender 5.3 (house common, props, trees,
+  river kit, mountains). The master's BAKED tree copies were made from the old trees (rebuild master with
+  AMALTASPUR_BAKE_FOLIAGE=0 on this PC to pick them up).
+- lighting_atmosphere.py: new `storybook` preset (user reference board 2: low warm west sun, warmer grade, more cumulus).
+  `night` v2 per the user's night brief: moon disc + maria in frame, subtle clouds, deep navy sky, softer moon key,
+  chowk rig (6 amber trunk uplights, warm canopy-underside bounce, 10 root accents, canopy-only cool moon spot, warm pools
+  under every chowk lantern, glowing windows on ~75% of hero houses, interior glow in hero buildings), shadow pool 2 GB.
+  Banyan detection fixed for the _BAKED copy (lanterns now light at night).
+- Reviews: G4_NIGHT_CHOWK_v002 and G4_DAY_STORYBOOK_v001 (with before/after compares). Master saved with its existing
+  morning preset; presets are applied at render time (`--preset storybook|night`).
+- Known: banyan canopy underside stays darker than the reference (baked leaf material barely takes light from below);
+  the massif flank still reads as a cut wall in CAM_Village_Hero.

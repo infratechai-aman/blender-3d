@@ -21,7 +21,7 @@ for lib, names in LIBS.items():
     if not os.path.exists(lib):
         print("[b2] missing library", lib)
         continue
-    with bpy.data.libraries.load(lib, link=True) as (src, dst):
+    with bpy.data.libraries.load(lib, link=True, relative=True) as (src, dst):
         dst.collections = [n for n in src.collections if n in names]
     for c in dst.collections:
         if c:

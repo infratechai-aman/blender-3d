@@ -33,10 +33,17 @@ PRESETS = {
     "dusk": dict(elev=2.5, azim=-70.0, energy=1.2, col=(1.0, 0.55, 0.32), angle=3.0, sky=0.12,
                  haze=(0.42, 0.45, 0.62), haze_amt=0.7, gain=(0.98, 0.99, 1.06), lift=(0.99, 1.0, 1.04),
                  cloud=0.45, exposure=0.6, practicals=True),
-    # moonlit night: moon = soft cool key, warm practical lamps everywhere
-    "night": dict(elev=38.0, azim=-35.0, energy=0.12, col=(0.68, 0.76, 1.0), angle=0.6, sky=0.45,
-                  haze=(0.035, 0.045, 0.08), haze_amt=0.5, gain=(1.04, 1.0, 0.97), lift=(0.995, 1.0, 1.02),
-                  cloud=0.0, exposure=1.0, night=True, practicals=True, lamp_gain=2.6),
+    # storybook day (user reference board 2): low warm late-afternoon sun from the west, saturated blue sky,
+    # small fair-weather cumulus, crisp long shadows, light warm grade
+    "storybook": dict(elev=18.0, azim=-94.0, energy=6.0, col=(1.0, 0.74, 0.48), angle=1.2, sky=0.11,
+                      haze=(0.78, 0.83, 0.9), haze_amt=0.12, gain=(1.08, 1.0, 0.9), lift=(1.0, 1.0, 1.03),
+                      cloud=0.42, exposure=0.35),
+    # moonlit night v2 (user night brief): moon in frame upper-right of CAM_Chowk_Close, cool rim on canopies,
+    # warm practicals + chowk rig (trunk uplights, root accents, lantern pools, cool canopy top) + window glow
+    "night": dict(elev=17.0, azim=61.0, energy=0.14, col=(0.6, 0.72, 1.0), angle=2.0, sky=0.42,
+                  haze=(0.04, 0.06, 0.11), haze_amt=0.22, gain=(1.03, 1.0, 0.98), lift=(1.0, 1.01, 1.04),
+                  cloud=0.35, exposure=1.35, night=True, practicals=True, lamp_gain=4.0, chowk_rig=True,
+                  windows=True),
 }
 
 # practical lights per lamp asset: (local offset, watts, radius, glowing-bulb radius, casts shadow)
@@ -65,7 +72,7 @@ def practicals(scene, on, gain=1.0):
         if o.instance_type != "COLLECTION" or o.instance_collection is None:
             continue
         name = o.instance_collection.name
-        if name == "VEG_Tree_Banyan_Chowk_Hero":
+        if name.startswith("VEG_Tree_Banyan_Chowk_Hero"):          # also the _BAKED copy used in the master
             path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "01_ENVIRONMENT", "LANDSCAPE",
                                 "LIB_Hero_Banyan_lanterns.json")
             try:
@@ -118,6 +125,120 @@ def practicals(scene, on, gain=1.0):
     print("[light] practicals: %d lights (%s)" % (len(pts), "on" if on else "off"))
 
 
+def _light(coll, name, kind, loc, energy, col, size=0.1, aim=None, spot=None, blend=0.6, shadow=True):
+    from mathutils import Vector
+    ld = bpy.data.lights.new(name, kind)
+    ld.energy = energy
+    ld.color = col
+    ld.use_shadow = shadow
+    if kind == "AREA":
+        ld.size = size
+    else:
+        ld.shadow_soft_size = size
+    if kind == "SPOT":
+        ld.spot_size = math.radians(spot or 60.0)
+        ld.spot_blend = blend
+    o = bpy.data.objects.new(name, ld)
+    o.location = loc
+    if aim is not None:
+        o.rotation_euler = (Vector(aim) - Vector(loc)).to_track_quat("-Z", "Y").to_euler()
+    coll.objects.link(o)
+    return o
+
+
+def chowk_night_rig(scene, on, gain=1.0):
+    """Night brief for the Village Chowk (lighting only, geometry untouched):
+    warm amber uplights on the banyan trunk + root accents, cool moonlight wash on the upper canopy,
+    warm light pools under every chowk lantern, and warm window glow on selected buildings village-wide."""
+    import random
+
+    import bmesh
+    from mathutils import Matrix, Vector
+    coll = bpy.data.collections.get("FX_NIGHT_CHOWK")
+    if coll is None:
+        coll = bpy.data.collections.new("FX_NIGHT_CHOWK")
+        scene.collection.children.link(coll)
+    for o in list(coll.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+    AMBER, WARM, COOL = (1.0, 0.56, 0.26), (1.0, 0.68, 0.38), (0.55, 0.68, 1.0)
+    ban = next((o for o in scene.objects if o.instance_type == "COLLECTION" and o.instance_collection
+                and o.instance_collection.name.startswith("VEG_Tree_Banyan_Chowk_Hero")), None)
+    z0 = ban.location.z if ban else 1.56
+    top = z0                                                 # instance origin sits on the chabutra top
+    n = 0
+    # 1 warm amber uplights grazing the trunk from the platform edge
+    for k in range(6):
+        a = 2 * math.pi * k / 6 + 0.3
+        p = (5.8 * math.cos(a), 5.8 * math.sin(a), top + 0.3)
+        _light(coll, "LGT_Chowk_TrunkUp_%d" % k, "SPOT", p, 900.0 * gain, AMBER, 0.25,
+               aim=(0.0, 0.0, top + 5.0), spot=55, blend=0.85)
+        n += 1
+    # warm bounce up into the canopy underside (soft, from the platform)
+    _light(coll, "LGT_Chowk_CanopyUnder", "AREA", (0.0, 0.0, top + 0.8), 16000.0 * gain, AMBER, 9.0, aim=(0.0, 0.0, top + 20.0))
+    n += 1
+    # 2 low root accents (small, warm, no shadow)
+    for k in range(10):
+        a = 2 * math.pi * k / 10
+        r = 3.4 + 0.5 * (k % 2)
+        _light(coll, "LGT_Chowk_Root_%d" % k, "POINT", (r * math.cos(a), r * math.sin(a), top + 0.35),
+               45.0 * gain, AMBER, 0.15, shadow=False)
+        n += 1
+    # 3 cool moon wash on the upper canopy (from high above, slightly toward the moon side)
+    # cone sized to the ~19 m canopy radius: only the leaves catch it, the paving outside stays dark
+    _light(coll, "LGT_Chowk_CanopyMoon", "SPOT", (4.0, 6.0, z0 + 60.0), 60000.0, COOL, 3.0,
+           aim=(0.0, 0.0, z0 + 14.0), spot=46, blend=0.35)
+    n += 1
+    # 4 warm pools on the paving under every lantern near the chowk
+    for o in scene.objects:
+        if o.instance_type == "COLLECTION" and o.instance_collection and \
+                o.instance_collection.name == "AST_LampPost_Lantern_A" and o.location.length < 70.0:
+            p = o.matrix_world @ Vector((0.0, 0.0, 2.95))     # inside the lantern; no shadow so the base plate can't block it
+            _light(coll, "LGT_Chowk_Pool_%s" % o.name[-3:], "SPOT", p, 650.0 * gain, WARM, 0.08,
+                   aim=(p.x, p.y, p.z - 3.0), spot=120, blend=1.0, shadow=False)
+            n += 1
+    # 5 warm windows: emissive panes on selected hero houses + interior glow in hero buildings
+    glow = bpy.data.materials.get("MAT_Window_Night_Glow") or bpy.data.materials.new("MAT_Window_Night_Glow")
+    glow.use_nodes = True
+    nt = glow.node_tree
+    _nodes_clear(nt)
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (1.0, 0.66, 0.34, 1)
+    em.inputs["Strength"].default_value = 7.0
+    nt.links.new(em.outputs[0], nt.nodes.new("ShaderNodeOutputMaterial").inputs["Surface"])
+    bm = bmesh.new()
+    rng = random.Random(7)
+    nw = nb = 0
+    for o in scene.objects:
+        if o.instance_type != "COLLECTION" or o.instance_collection is None:
+            continue
+        cn = o.instance_collection.name
+        if cn == "AST_House_Common_A" and rng.random() < 0.75:
+            for wx in (-3.25, 3.35):                          # front windows (see hero_house_common OPENINGS)
+                if rng.random() < 0.8:
+                    M = o.matrix_world @ Matrix.Translation((wx, -1.95 + 0.26, 1.97)) @ Matrix.Rotation(math.pi / 2, 4, "X")
+                    bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=0.5, matrix=M @ Matrix.Diagonal((0.82, 1.22, 1.0, 1.0)))
+                    nw += 1
+            _light(coll, "LGT_Window_%s" % o.name, "POINT", o.matrix_world @ Vector((0.0, -0.9, 2.0)), 40.0 * gain, WARM,
+                   0.3, shadow=False)
+            nb += 1
+        elif cn.startswith(("AST_Shop", "AST_Panchayat", "AST_House_Middle", "AST_Haveli", "AST_House_Small",
+                            "AST_Shop2", "AST_School")) and rng.random() < 0.85:
+            _light(coll, "LGT_Interior_%s" % o.name, "POINT", o.matrix_world @ Vector((0.0, 0.0, 2.2)), 160.0 * gain,
+                   WARM, 0.4, shadow=False)
+            nb += 1
+    me = bpy.data.meshes.new("ME_Window_Night_Glow")
+    bm.to_mesh(me)
+    bm.free()
+    me.materials.append(glow)
+    wo = bpy.data.objects.new("GEO_Window_Night_Glow", me)
+    wo.visible_shadow = False
+    coll.objects.link(wo)
+    coll.hide_render = not on
+    coll.hide_viewport = not on
+    print("[light] chowk night rig: %d rig lights, %d glowing windows, %d interior/window lights (%s)"
+          % (n, nw, nb, "on" if on else "off"))
+
+
 def build_night_world(P):
     """Moonlit sky: navy gradient with a faint horizon glow, stars, and a moon disc in the moonlight direction."""
     w = bpy.data.worlds.get("WLD_Night") or bpy.data.worlds.new("WLD_Night")
@@ -132,9 +253,9 @@ def build_night_world(P):
     L.new(tc.outputs["Generated"], sep.inputs[0])
     ramp = N.new("ShaderNodeValToRGB")
     els = ramp.color_ramp.elements
-    els[0].position, els[0].color = 0.0, (0.05, 0.065, 0.11, 1)
-    els[1].position, els[1].color = 0.5, (0.006, 0.009, 0.022, 1)
-    els.new(0.08).color = (0.02, 0.03, 0.06, 1)
+    els[0].position, els[0].color = 0.0, (0.07, 0.1, 0.19, 1)          # deep navy, lighter at the horizon
+    els[1].position, els[1].color = 0.55, (0.01, 0.017, 0.05, 1)
+    els.new(0.1).color = (0.035, 0.055, 0.12, 1)
     L.new(sep.outputs["Z"], ramp.inputs[0])
     vor = N.new("ShaderNodeTexVoronoi")
     vor.inputs["Scale"].default_value = 260.0
@@ -151,15 +272,44 @@ def build_night_world(P):
     dot.inputs[1].default_value = sun_dir(P["elev"], P["azim"])
     moon = N.new("ShaderNodeMapRange")
     L.new(dot.outputs["Value"], moon.inputs["Value"])
-    moon.inputs["From Min"].default_value = 0.99972
-    moon.inputs["From Max"].default_value = 0.99982
-    moon.inputs["To Max"].default_value = 40.0
+    moon.inputs["From Min"].default_value = 0.99925                    # ~2.2 deg storybook moon
+    moon.inputs["From Max"].default_value = 0.99935
+    moon.inputs["To Max"].default_value = 30.0
+    mare = N.new("ShaderNodeTexNoise")                                  # soft maria on the disc
+    mare.inputs["Scale"].default_value = 900.0
+    L.new(tc.outputs["Generated"], mare.inputs["Vector"])
+    mm = N.new("ShaderNodeMapRange")
+    L.new(mare.outputs["Fac"], mm.inputs["Value"])
+    mm.inputs["From Min"].default_value, mm.inputs["From Max"].default_value = 0.35, 0.7
+    mm.inputs["To Min"].default_value, mm.inputs["To Max"].default_value = 0.72, 1.0
+    moon_c = _math(N, L, "MULTIPLY", moon.outputs["Result"], mm.outputs["Result"])
     halo = N.new("ShaderNodeMapRange")
     L.new(dot.outputs["Value"], halo.inputs["Value"])
-    halo.inputs["From Min"].default_value = 0.985
-    halo.inputs["From Max"].default_value = 0.9998
-    halo.inputs["To Max"].default_value = 0.35
-    add = _math(N, L, "ADD", _math(N, L, "ADD", stars, moon.outputs["Result"]), halo.outputs["Result"])
+    halo.inputs["From Min"].default_value = 0.9965
+    halo.inputs["From Max"].default_value = 0.9993
+    halo.inputs["To Max"].default_value = 0.16
+    # subtle drifting clouds, faintly lit, brighter around the moon
+    zc = _math(N, L, "MAXIMUM", sep.outputs["Z"], 0.02)
+    cxy = N.new("ShaderNodeCombineXYZ")
+    L.new(_math(N, L, "MULTIPLY", _math(N, L, "DIVIDE", sep.outputs["X"], zc), 0.5), cxy.inputs[0])
+    L.new(_math(N, L, "MULTIPLY", _math(N, L, "DIVIDE", sep.outputs["Y"], zc), 0.5), cxy.inputs[1])
+    cn = N.new("ShaderNodeTexNoise")
+    cn.inputs["Scale"].default_value = 1.6
+    cn.inputs["Detail"].default_value = 7.0
+    cn.inputs["Roughness"].default_value = 0.6
+    L.new(cxy.outputs[0], cn.inputs["Vector"])
+    cr = N.new("ShaderNodeMapRange")
+    L.new(cn.outputs["Fac"], cr.inputs["Value"])
+    cr.inputs["From Min"].default_value = 1.0 - P.get("cloud", 0.35)
+    cr.inputs["From Max"].default_value = 1.0 - P.get("cloud", 0.35) + 0.22
+    hz = N.new("ShaderNodeMapRange")
+    L.new(sep.outputs["Z"], hz.inputs["Value"])
+    hz.inputs["From Min"].default_value, hz.inputs["From Max"].default_value = 0.04, 0.2
+    cmask = _math(N, L, "MULTIPLY", _math(N, L, "MULTIPLY", cr.outputs["Result"], hz.outputs["Result"]), 0.85)
+    clit = _math(N, L, "ADD", 0.06, _math(N, L, "MULTIPLY", halo.outputs["Result"], 0.9))
+    stars = _math(N, L, "MULTIPLY", stars, _math(N, L, "SUBTRACT", 1.0, cmask))      # clouds hide stars
+    add = _math(N, L, "ADD", _math(N, L, "ADD", stars, moon_c), halo.outputs["Result"])
+    add = _math(N, L, "ADD", add, _math(N, L, "MULTIPLY", cmask, clit))
     cm = N.new("ShaderNodeCombineColor")
     for i in range(3):
         L.new(add, cm.inputs[i])
@@ -410,7 +560,8 @@ def eevee_quality(scene):
     e = scene.eevee
     for k, v in (("use_raytracing", True), ("use_fast_gi", True), ("fast_gi_method", "GLOBAL_ILLUMINATION"),
                  ("fast_gi_distance", 8.0), ("use_shadows", True), ("shadow_ray_count", 3), ("shadow_step_count", 10),
-                 ("shadow_resolution_scale", 1.0), ("taa_render_samples", 64), ("use_volumetric_shadows", False)):
+                 ("shadow_resolution_scale", 1.0), ("taa_render_samples", 64), ("use_volumetric_shadows", False),
+                 ("shadow_pool_size", "2048")):
         try:
             setattr(e, k, v)
         except Exception:
@@ -433,6 +584,7 @@ def apply(scene, preset="morning"):
     build_compositor(P, scene)
     eevee_quality(scene)
     practicals(scene, bool(P.get("practicals")), P.get("lamp_gain", 1.0))
+    chowk_night_rig(scene, bool(P.get("chowk_rig")), 1.0)
     for o in scene.objects:                        # tiny/many scatter never casts shadows (EEVEE shadow map memory)
         if o.name.startswith(("B6_GEO_Pebbles", "ENV_GrassTufts", "ENV_Kans")):
             o.visible_shadow = False

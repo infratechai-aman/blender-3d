@@ -37,7 +37,7 @@ NAMES = ["AST_UtilityPole_A", "AST_TransformerPole_A", "AST_PublicTap_A", "AST_C
 
 
 def _link():
-    with bpy.data.libraries.load(LIB, link=True) as (src, dst):
+    with bpy.data.libraries.load(LIB, link=True, relative=True) as (src, dst):
         dst.collections = [n for n in src.collections if n in NAMES]
     return {c.name: c for c in dst.collections if c}
 

@@ -604,7 +604,7 @@ def build_stage(M):
 
     # linked hero house x2 + trees
     if os.path.exists(HOUSE_BLEND):
-        with bpy.data.libraries.load(HOUSE_BLEND, link=True) as (src, dst):
+        with bpy.data.libraries.load(HOUSE_BLEND, link=True, relative=True) as (src, dst):
             dst.collections = [c for c in src.collections if c == "AST_House_Common_A"]
         house = dst.collections[0]
         inst(house, "STG_House_A", (0, 0, 0))
@@ -612,7 +612,7 @@ def build_stage(M):
         inst(house, "STG_House_C", (6.0, -23.2, 0), rz=math.pi)            # across the street, facing it
     if os.path.exists(TREES_BLEND):
         want = ["VEG_Tree_Neem_A", "VEG_Tree_Mango_A", "VEG_Tree_Amaltas_A", "VEG_Tree_Palm_A", "VEG_Tree_Peepal_A_LOD1"]
-        with bpy.data.libraries.load(TREES_BLEND, link=True) as (src, dst):
+        with bpy.data.libraries.load(TREES_BLEND, link=True, relative=True) as (src, dst):
             dst.collections = [c for c in src.collections if c in want]
         T = {c.name: c for c in dst.collections}
         inst(T["VEG_Tree_Neem_A"], "STG_Tree_Neem", (-8.0, 7.0, 0), 0.6)

@@ -52,7 +52,7 @@ log = B.log
 
 
 def link_collections(path, names):
-    with bpy.data.libraries.load(path, link=True) as (src, dst):
+    with bpy.data.libraries.load(path, link=True, relative=True) as (src, dst):
         dst.collections = [c for c in src.collections if c in names]
     got = {c.name: c for c in dst.collections if c}
     missing = [n for n in names if n not in got]
