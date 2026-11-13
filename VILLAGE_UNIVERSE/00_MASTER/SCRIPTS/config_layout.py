@@ -23,8 +23,10 @@ TEMPLE_POS = (114.0, 65.0)    # also used for the small rise in the terrain
 # --------------------------------------------------------------------------
 # River (centre line, north -> south).  Water is ~30 m wide.
 # --------------------------------------------------------------------------
-RIVER_CTRL = [(146, 1160), (150, 820), (158, 600), (172, 380), (170, 200), (166, 110),
+RIVER_CTRL = [(149, 950), (150, 820), (158, 600), (172, 380), (170, 200), (166, 110),
               (150, 40), (142, -30), (160, -140), (196, -280), (215, -460), (230, -720), (245, -960)]
+MOUNTAIN_ORIGIN = (149.0, 900.0)  # rocky massif + waterfall; the falls land in the river head at ~(149, 945)
+MOUNTAIN_Z0 = -4.5            # sinks the massif's flat apron under the valley floor / river bed
 RIVER_CLEAR = 24.0            # buildings must stay this far from the river centre line
 
 # --------------------------------------------------------------------------
@@ -132,6 +134,19 @@ CROPS = [  # name, weight
     ("mustard", 0.30), ("wheat", 0.34), ("paddy", 0.16), ("fallow", 0.20),
 ]
 
+# Phase 1b integration: orchards (field cells inside are dropped) and tubewell yards (nearest cell to each
+# target becomes a pump-house yard).  Hero farm vignette = machaan + scarecrow near FARM_HERO.
+ORCHARDS = [
+    dict(name="Aam_Bagh_NorthWest", x=(-300, -205), y=(160, 300), spacing=9.5, kind="Mango"),
+    dict(name="Aam_Bagh_EastBank",  x=( 330,  470), y=( 60, 190), spacing=10.0, kind="Mango"),
+    dict(name="Amrood_Bagh_South",  x=(-330, -250), y=(-460, -380), spacing=7.0, kind="Neem"),
+]
+TUBEWELL_TARGETS = [(75, 215), (-260, -60), (300, -150), (-180, -330)]
+FARM_HERO = (100, 260)
+# Bake tree/shrub leaf instances into one mesh per type (needed on 8 GB RAM / 4 GB VRAM machines).
+# Set False (or env AMALTASPUR_BAKE_FOLIAGE=0) on the RTX workstation for per-leaf colour variation.
+import os as _os  # noqa: E402
+BAKE_FOLIAGE = _os.environ.get("AMALTASPUR_BAKE_FOLIAGE", "1") != "0"
 TREE_COUNT_TARGET = 1600
 TREE_MIN_SPACING = 5.5
 

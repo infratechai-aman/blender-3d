@@ -3,8 +3,8 @@ ENV-0001,OBJ_Terrain_Master,environment,00_MASTER/MASTER_WORLD.blend,ENV_TERRAIN
 ENV-0002,OBJ_River_Water,environment,00_MASTER/MASTER_WORLD.blend,ENV_WATER,v001,~30 wide,MAT_BLK_Water,river,all,n/a,G1 approved 2026-11-12,
 ENV-0003,OBJ_Road_* (11),environment,00_MASTER/MASTER_WORLD.blend,ENV_ROADS,v001,-,MAT_BLK_Road*,roads,all,n/a,G1 approved 2026-11-12,
 ENV-0004,OBJ_Chowk_Plaza,environment,00_MASTER/MASTER_WORLD.blend,ENV_ROADS,v001,r=23,MAT_BLK_ChowkStone,main square,all,n/a,G1 approved 2026-11-12,
-ENV-0005,OBJ_Fields_Blockout,environment,00_MASTER/MASTER_WORLD.blend,ENV_FIELDS,v001,271 patches,MAT_BLK_Crop*,farmland,wide,n/a,G1 approved 2026-11-12,
-ENV-0006,INST_Tree_* (420),vegetation,00_MASTER/MASTER_WORLD.blend,ENV_VEGETATION,v001,-,MAT_BLK_Foliage*,trees (instances),wide/medium,n/a,G1 approved 2026-11-12,4 prototype collections in PROTO_LIBRARY
+ENV-0005,OBJ_Fields_Blockout,environment,00_MASTER/MASTER_WORLD.blend,ENV_FIELDS,v001,234 patches,MAT_BLK_Crop*,farmland,wide,n/a,G1 approved 2026-11-12,
+ENV-0006,INST_Tree_* (1600),vegetation,00_MASTER/MASTER_WORLD.blend,ENV_VEGETATION,v001,-,MAT_BLK_Foliage*,trees (instances),wide/medium,n/a,G1 approved 2026-11-12,4 prototype collections in PROTO_LIBRARY
 ENV-0007,OBJ_Landmark_Banyan_Chowk,vegetation,00_MASTER/MASTER_WORLD.blend,ENV_VEGETATION,v001,~24 wide,MAT_BLK_FoliageBanyan,hero tree,all,n/a,G1 approved 2026-11-12,needs hero sculpt in Phase 1b
 ENV-0008,OBJ_Backdrop_OuterTerrain,environment,00_MASTER/MASTER_WORLD.blend,ENV_BACKDROP,v001,7000x7000,terrain,horizon hills ring,far,n/a,G1 approved 2026-11-12,"50 m grid, drops under the master terrain"
 LMK-0001,OBJ_Landmark_Gate_001,landmark,00_MASTER/MASTER_WORLD.blend,BLD_LANDMARKS,v001,~12 wide,sandstone,entrance,all,n/a,G1 approved 2026-11-12,

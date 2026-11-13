@@ -36,11 +36,11 @@ sc.render.image_settings.file_format = "PNG"
 if cycles:
     sc.render.engine = "CYCLES"
     prefs = bpy.context.preferences.addons["cycles"].preferences
-    prefs.compute_device_type = "OPTIX"
+    prefs.compute_device_type = "CUDA"
     prefs.get_devices()
     for d in prefs.devices:
-        d.use = d.type == "OPTIX"
-    sc.cycles.device = "GPU"
+        d.use = d.type == "CUDA"
+    sc.cycles.device = "CPU" if "--cpu" in args else "GPU"   # --cpu: 4 GB cards run out of memory on the full village
     sc.cycles.samples = int(arg("--samples", 48 if quick else 192))
     sc.cycles.use_denoising = True
     sc.cycles.max_bounces = 8
@@ -52,7 +52,8 @@ else:
         pass
 labels = bpy.data.collections["REVIEW_LABELS"]
 
-cams = [o.name for o in bpy.data.collections["LIGHTING_CAMERAS"].objects if o.type == "CAMERA"] if cycles else list(C.CAMERAS)
+all_cams = [o.name for o in bpy.data.collections["LIGHTING_CAMERAS"].objects if o.type == "CAMERA"]
+cams = all_cams if (cycles or only) else list(C.CAMERAS)
 for name in cams:
     if only and name not in only:
         continue

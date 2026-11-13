@@ -157,13 +157,16 @@ def terrain_height(x, y):
     h = 0.40 * np.sin(x * 0.013 + 1.3) * np.cos(y * 0.011) + 0.22 * np.sin(x * 0.029 + y * 0.021 + 0.7)
     h += core * (2.4 * np.sin(x * 0.006 + 0.4) * np.sin(y * 0.005 + 1.1) + 1.1 * np.sin(x * 0.017 - y * 0.013))
     h += -0.0035 * x * (1.0 - core)            # village drains gently toward the river
+    h += 2.5 * core                             # open country sits above the river-mud band (shader paints z<0 as bank)
     tx, ty = C.TEMPLE_POS
     h += 1.3 * np.exp(-((x - tx) ** 2 + (y - ty) ** 2) / 30.0 ** 2)   # temple on a slight rise
 
     hill = smoothstep(560.0, 1000.0, y)         # low northern foothills (v2: the rocky massif is the backdrop)
     ridge = (0.65 + 0.30 * np.sin(x * 0.009 + 0.5) + 0.12 * np.sin(x * 0.031 + 2.0)
              + 0.06 * np.sin(x * 0.07 + y * 0.05))
-    h += (hill ** 1.6) * 38.0 * ridge
+    h += (hill ** 1.6) * 38.0 * ridge * (1.0 - massif_lateral_mask(x))
+    if MASSIF is not None:                      # massif apron/flanks shaped BEFORE the river carve
+        h = massif_shape(x, y, h)
 
     d = dist_to_polyline(np.stack([x, y], 1), river_path().pts)
     k = 1.0 - smoothstep(9.0, 24.0 + 70.0 * hill, d)
@@ -174,3 +177,56 @@ def terrain_height(x, y):
 
 
 EXTRA_CUTS = []
+
+# ---------------------------------------------------------------------------
+# Rocky massif integration (set by build_master_v2 from the linked library mesh).
+#   MASSIF = dict(ox, oy, z0, xs, ys, H)  H[j, i] = massif height (library-local z) at (xs[i], ys[j]), NaN = no mesh
+# Inside the footprint the terrain is pushed just under the rock (only where the rock rises above the apron);
+# outside it the terrain is raised to bury the massif's cliff-wall sides and falls off over ~120-280 m.
+# ---------------------------------------------------------------------------
+MASSIF = None
+MASSIF_X_HALF = 460.0
+MASSIF_Y = (-120.0, 520.0)
+
+
+def massif_lateral_mask(x):
+    """1 across the massif's width (old foothills removed in front of it), fading out 150 m beyond its sides."""
+    if MASSIF is None:
+        return np.zeros_like(np.asarray(x, float))
+    dx = np.abs(np.asarray(x, float) - MASSIF["ox"]) - MASSIF_X_HALF
+    return 1.0 - smoothstep(-60.0, 150.0, dx)
+
+
+def _massif_lookup(lx, ly):
+    M = MASSIF
+    xs, ys, H = M["xs"], M["ys"], M["H"]
+    fx = np.clip((lx - xs[0]) / (xs[1] - xs[0]), 0, len(xs) - 1.001)
+    fy = np.clip((ly - ys[0]) / (ys[1] - ys[0]), 0, len(ys) - 1.001)
+    i0, j0 = fx.astype(int), fy.astype(int)
+    tx, ty = fx - i0, fy - j0
+    Hn = np.nan_to_num(H, nan=0.0)
+    return (Hn[j0, i0] * (1 - tx) * (1 - ty) + Hn[j0, i0 + 1] * tx * (1 - ty)
+            + Hn[j0 + 1, i0] * (1 - tx) * ty + Hn[j0 + 1, i0 + 1] * tx * ty)
+
+
+def massif_shape(x, y, h):
+    M = MASSIF
+    lx, ly = x - M["ox"], y - M["oy"]
+    x0, x1 = -MASSIF_X_HALF + 4.0, MASSIF_X_HALF - 4.0
+    y0, y1 = MASSIF_Y[0] + 4.0, MASSIF_Y[1] - 24.0
+    inside = (lx > x0) & (lx < x1) & (ly > y0) & (ly < y1)
+    cx, cy = np.clip(lx, x0, x1), np.clip(ly, y0, y1)
+    Hc = _massif_lookup(cx, cy)
+    out = h.copy()
+    # inside: sink the terrain under the rock wherever the rock clears the (buried) apron
+    w = smoothstep(1.0, 6.0, Hc)
+    under = np.minimum(h, M["z0"] + Hc - 1.2)
+    out = np.where(inside, h * (1 - w) + under * w, out)
+    # outside: raise the ground to meet the rock edge, falling off with distance
+    d = np.hypot(lx - cx, ly - cy)
+    R = 160.0 + 2.2 * Hc                        # long, gentle flanks (no steep scar against the rock)
+    s = smoothstep(0.0, 1.0, d / R)
+    T = M["z0"] + Hc + 1.0
+    raised = np.maximum(h, T * (1 - s) + h * s)
+    out = np.where(inside, out, np.where(Hc > 3.0, raised, h))
+    return out

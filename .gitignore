@@ -2,3 +2,8 @@
 *.pyc
 *.blend1
 *.blend2
+
+# local checkpoints made by the build scripts (kept on disk, not pushed)
+VILLAGE_UNIVERSE/99_ARCHIVE/*
+*.crash.txt
+VILLAGE_UNIVERSE/10_EXPORTS/REVIEWS/**/seq/

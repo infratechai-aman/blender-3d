@@ -46,3 +46,42 @@
 - Open question for the user: bullock approach (proper generated/supplied model vs placeholder vs wait for Phase 6).
 - Rendering tip: run only one Cycles job at a time on the 8 GB GPU (two at once crashed).
 
+
+
+## 2026-11-13 - Master integration v2 + first character style tests (laptop session)
+- Machine: GTX 1650 4 GB / 8 GB RAM / Blender 5.2.3. OptiX fails here -> render scripts use CUDA. Full-village Cycles runs out of
+  memory; EEVEE previews work with foliage baked (`BAKE_FOLIAGE`, env `AMALTASPUR_BAKE_FOLIAGE=0` to disable on the RTX PC).
+- Massif + waterfall moved to (149, 900, -4.5); river now starts at the falls; terrain shaped around the massif (geo.MASSIF);
+  open country lifted 2.5 m outside the village core. Known issue: massif flanks still read as cut walls from the air.
+- New `SCRIPTS/hero_farm.py` -> `06_PROPS/LIB_Farm_Props.blend`: machaan, tubewell (pump room, hauz, channel, LT pole), scarecrow,
+  3 shrubs, green/dry grass tufts, kans grass. Review renders in `PH1C_FARM_PROPS_v001`.
+- build_master_v2: field bunds (21.6 km), 3 orchards, 4 tubewell yards, 8 machaans, 15 scarecrows, +haystacks, +1,121 trees
+  (avenues, orchards, bunds, north valley), shrubs + ~37k grass tufts + kans on the banks, chowk kerb, new review cameras.
+  Plot IDs P01-P50 unchanged. EEVEE previews in `G4_INTEGRATED_v002_wip`.
+- Characters (style tests, NOT approved): `CHR_Animal_Bullock_001` (script-built; user: "bullock is good") and
+  `CHR_Human_Woman_001` v002 on an MPFB 2.0.18 CC0 base mesh with the built-in Mixamo-named rig (arm pose test only;
+  no Mixamo animation tested yet). v001 (pure script) superseded.
+- Hair: `SCRIPTS/hair_strands.py` - real strand hair (Blender hair curves) on a rig-deformed scalp surface; Woman_001
+  braid built with the bundled "Braid Hair Curves" node and simulated with "Hair Dynamics" (Physics mode); 48-frame
+  test clip `G5_HUMAN_WOMAN_001_v002/braid_anim/braid_physics_test.mp4`. Sideburns/ear gap fixed, cap hidden under strands.
+- New: `CHR_Human_Man_001` (farmer ~55, dhoti-kurta, gamchha, salt-and-pepper strand hair, strand moustache/brows,
+  Mixamo-named rig) and `LIB_Animals_Farm.blend` (cow, buffalo, goat, dog, hen) in the bullock style. All pending review.
+
+## 2026-11-13 - Environment upgrade Batches 1-6 (laptop session, Blender 5.2)
+- B1 `SCRIPTS/lighting_atmosphere.py`: physical sky + clouds, warm morning sun, haze on geometry only (mist pass,
+  sky re-added from the environment pass), grade + bloom + vignette; presets morning / golden / dusk / night.
+  Night = moon, stars, and warm practical lights generated at every lamp asset and every building's own lamp list.
+- Hero banyan `SCRIPTS/hero_banyan_chowk.py` -> `01_ENVIRONMENT/LANDSCAPE/LIB_Hero_Banyan.blend` (30 m canopy, aerial
+  and pillar roots, kalava, shrine, diyas, 12 hanging lanterns) replaces the chowk banyan.
+- B2 `arch_kit.py` + `hero_buildings_b2.py` -> `02_ARCHITECTURE/LIB_Buildings_B2.blend` (middle house, haveli, kirana /
+  chai / cloth shops, 2-storey hardware shop, Shiv temple, school, panchayat - all with interiors) and
+  `hero_house_poor.py` -> `HOUSES_SMALL/HERO_House_Small_Kaccha_A.blend`. All 29 blockout plots now hero buildings
+  (blockouts kept hidden in B2_REPLACED_BLOCKOUT).  Signs are English for now (Blender can't shape Devanagari).
+- B3 `hero_props_b3.py` + `place_b3.py`: poles + sagging wires, drains, taps, benches, bins, direction board, thelas,
+  buntings, bicycles, charpais, bus stop, milestone, water tower, mobile tower.
+- B4 `hero_trees_b4.py` -> `LIB_Trees_B4.blend` (bamboo, eucalyptus, babool, gulmohar, ashoka, ber, sugarcane, hedge);
+  B5 weathering in hero_lib (plaster streaks/patches/flaking, tile variation + moss, mud cracks, wood grain, stone damp)
+  and master terrain (dry patches, wildflowers) / dirt roads (pebbles); B6 footpaths, pebbles, far ridge ring.
+  Placement: `patch_b456.py` (also called from build_master_v2).  Not re-generated with B5 materials yet: the older
+  approved libraries (house common, props, trees, river kit, mountains) - those need the RTX PC (Blender 5.3).
+- Checkpoints: 99_ARCHIVE/MASTER_WORLD_preB1/preBanyan/preB2/preB3/preB456_*.blend

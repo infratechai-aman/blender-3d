@@ -298,8 +298,25 @@ def mat_plaster(name, base, band=None, band_top=1.3, grime="#6E5A45", rough=0.88
     st = t.noise(obj, 0.45, 2.0, 0.5)
     sf = t.ramp(st.outputs["Fac"], [(0.5, (0, 0, 0, 1)), (0.75, (0.32, 0.32, 0.32, 1))])
     col = t.mix(t.n("ShaderNodeSeparateColor", Color=sf).outputs[0], col, hex_lin(grime, 1.2))
+    # B5: vertical rain streaks (noise stretched along Z), strongest high on the wall under the roof line
+    sm = t.n("ShaderNodeMapping", Vector=obj, Scale=(26.0, 26.0, 0.9))
+    streak = t.noise(sm.outputs[0], 1.0, 4.0, 0.55)
+    sk = t.ramp(streak.outputs["Fac"], [(0.55, (0, 0, 0, 1)), (0.72, (0.38, 0.38, 0.38, 1))])
+    col = t.mix(t.n("ShaderNodeSeparateColor", Color=sk).outputs[0], col, hex_lin(grime, 0.85))
+    # B5: cement repair patches (blocky voronoi cells, sparse)
+    vor = t.n("ShaderNodeTexVoronoi", Vector=obj, Scale=2.8)
+    vor.feature = "F1"
+    pv = t.n("ShaderNodeSeparateColor", Color=vor.outputs["Color"]).outputs[0]
+    patch = t.math("GREATER_THAN", pv, 0.975)
+    col = t.mix(t.math("MULTIPLY", patch, 0.35), col, hex_lin("#B7B1A5"))
+    # B5: plaster flaked off near the ground showing brick
+    flake_n = t.noise(obj, 3.2, 6.0, 0.7)
+    low = t.n("ShaderNodeMapRange", Value=z, **{"From Min": 0.35, "From Max": 1.1, "To Min": 1.0, "To Max": 0.0}).outputs["Result"]
+    flake = t.math("GREATER_THAN", t.math("MULTIPLY", flake_n.outputs["Fac"], t.math("ADD", low, 0.2)), 0.62)
+    col = t.mix(flake, col, hex_lin("#8E4A33"))
     bn = t.noise(obj, 22.0, 8.0, 0.62)
-    t.finish(col, rough, t.bump(bn.outputs["Fac"], 0.18, 0.01))
+    rgh = t.math("ADD", rough, t.math("MULTIPLY", t.math("SUBTRACT", streak.outputs["Fac"], 0.5), 0.08))
+    t.finish(col, rgh, t.bump(t.math("ADD", bn.outputs["Fac"], t.math("MULTIPLY", flake, -0.6)), 0.22, 0.01))
     return m
 
 
@@ -311,6 +328,15 @@ def mat_tile(name="MAT_Roof_Terracotta_CountryTile"):
     n2 = t.noise(obj, 0.7, 4.0, 0.6)
     dirt = t.ramp(n2.outputs["Fac"], [(0.58, (0, 0, 0, 1)), (0.78, (0.55, 0.55, 0.55, 1))])
     col = t.mix(t.n("ShaderNodeSeparateColor", Color=dirt).outputs[0], col, hex_lin("#4E4235"))
+    # B5: per-tile colour shift (voronoi cells ~ tile size), lichen/moss in damp patches, sun-bleached tops
+    vt = t.n("ShaderNodeTexVoronoi", Vector=obj, Scale=5.5)
+    tv = t.n("ShaderNodeSeparateColor", Color=vt.outputs["Color"]).outputs[0]
+    col = t.mix(t.math("MULTIPLY", t.math("SUBTRACT", tv, 0.5), 0.5), col, hex_lin("#6E2E20"))
+    mo = t.noise(obj, 1.4, 5.0, 0.65)
+    moss = t.ramp(mo.outputs["Fac"], [(0.62, (0, 0, 0, 1)), (0.74, (0.7, 0.7, 0.7, 1))])
+    col = t.mix(t.n("ShaderNodeSeparateColor", Color=moss).outputs[0], col, hex_lin("#5E6A3A"))
+    up = t.n("ShaderNodeSeparateXYZ", Vector=t.n("ShaderNodeNewGeometry").outputs["Normal"]).outputs["Z"]
+    col = t.mix(t.math("MULTIPLY", t.math("MAXIMUM", t.math("SUBTRACT", up, 0.6), 0.0), 0.5), col, hex_lin("#C98B6A"))
     bn = t.noise(obj, 45.0, 6.0, 0.6)
     t.finish(col, 0.72, t.bump(bn.outputs["Fac"], 0.25, 0.006))
     return m
@@ -324,8 +350,14 @@ def mat_wood(name="MAT_Wood_Weathered", c1="#5A3D28", c2="#7E5A3B", rough=0.74):
     col = t.ramp(n1.outputs["Fac"], [(0.3, hex_lin(c1)), (0.7, hex_lin(c2))])
     n2 = t.noise(obj, 11.0, 6.0, 0.6)
     col = t.mix(t.math("MULTIPLY", n2.outputs["Fac"], 0.25), col, hex_lin(c1, 0.75))
+    # B5: long grain (noise stretched along Z, most posts/planks are vertical) + silver-grey weathering
+    gm = t.n("ShaderNodeMapping", Vector=obj, Scale=(38.0, 38.0, 2.2))
+    grain = t.noise(gm.outputs[0], 1.0, 6.0, 0.65)
+    col = t.mix(t.math("MULTIPLY", t.math("GREATER_THAN", grain.outputs["Fac"], 0.56), 0.45), col, hex_lin(c1, 0.6))
+    wz = t.noise(obj, 0.9, 3.0, 0.5)
+    col = t.mix(t.math("MULTIPLY", t.math("MAXIMUM", t.math("SUBTRACT", wz.outputs["Fac"], 0.5), 0.0), 0.9), col, hex_lin("#8C8579"))
     fib = t.noise(obj, 60.0, 4.0, 0.6)
-    t.finish(col, rough, t.bump(fib.outputs["Fac"], 0.12, 0.003))
+    t.finish(col, rough, t.bump(t.math("ADD", fib.outputs["Fac"], t.math("MULTIPLY", grain.outputs["Fac"], 0.8)), 0.16, 0.003))
     return m
 
 
@@ -355,8 +387,16 @@ def mat_stone_blocks(name="MAT_Stone_Plinth_Blocks", c1="#8F867B", c2="#A69B8B",
     br.offset = 0.5
     n = t.noise(obj, 6.0, 6.0)
     col = t.mix(t.math("MULTIPLY", n.outputs["Fac"], 0.3), br.outputs["Color"], hex_lin(mortar))
-    h = t.math("ADD", t.math("MULTIPLY", br.outputs["Fac"], -1.0), t.math("MULTIPLY", n.outputs["Fac"], 0.3))
-    t.finish(col, rough, t.bump(h, 0.35, 0.01))
+    # B5: per-block tone shift, eroded mortar, damp dark + moss at the foot of the wall
+    bv = t.n("ShaderNodeTexWhiteNoise", Vector=t.n("ShaderNodeMapping", Vector=uv, Scale=(scale / bw, scale / rh, 1.0)).outputs[0])
+    bvv = t.n("ShaderNodeSeparateColor", Color=bv.outputs["Color"]).outputs[0]
+    col = t.mix(t.math("MULTIPLY", t.math("SUBTRACT", bvv, 0.5), 0.35), col, hex_lin(c1, 0.7))
+    z = sx.outputs["Z"]
+    damp = t.n("ShaderNodeMapRange", Value=z, **{"From Min": 0.05, "From Max": 0.6, "To Min": 0.55, "To Max": 0.0}).outputs["Result"]
+    dn = t.noise(obj, 3.0, 5.0, 0.6)
+    col = t.mix(t.math("MULTIPLY", damp, dn.outputs["Fac"]), col, hex_lin("#4A4E36"))
+    h = t.math("ADD", t.math("MULTIPLY", br.outputs["Fac"], -1.2), t.math("MULTIPLY", n.outputs["Fac"], 0.3))
+    t.finish(col, rough, t.bump(h, 0.4, 0.012))
     return m
 
 
@@ -376,8 +416,16 @@ def mat_mud(name="MAT_Mud_Plaster_Ochre", base="#A9825B", rough=0.95):
     obj = t.n("ShaderNodeTexCoord").outputs["Object"]
     n = t.noise(obj, 1.8, 5.0, 0.6)
     col = t.ramp(n.outputs["Fac"], [(0.3, hex_lin(base, 0.82)), (0.7, hex_lin(base, 1.08))])
+    # B5: shrinkage cracks (voronoi edges, sparse) + hand-smoothing strokes
+    cv = t.n("ShaderNodeTexVoronoi", Vector=obj, Scale=3.5)
+    cv.feature = "DISTANCE_TO_EDGE"
+    cn = t.noise(obj, 2.0, 3.0, 0.5)
+    crack = t.math("MULTIPLY", t.math("LESS_THAN", cv.outputs["Distance"], 0.02), t.math("GREATER_THAN", cn.outputs["Fac"], 0.55))
+    col = t.mix(t.math("MULTIPLY", crack, 0.7), col, hex_lin(base, 0.45))
+    wave = t.n("ShaderNodeTexWave", Vector=obj, Scale=1.6, Distortion=9.0, Detail=2.0)
+    col = t.mix(t.math("MULTIPLY", wave.outputs["Fac"], 0.12), col, hex_lin(base, 1.15))
     bn = t.noise(obj, 9.0, 10.0, 0.7)
-    t.finish(col, rough, t.bump(bn.outputs["Fac"], 0.35, 0.02))
+    t.finish(col, rough, t.bump(t.math("ADD", bn.outputs["Fac"], t.math("MULTIPLY", crack, -1.0)), 0.35, 0.02))
     return m
 
 

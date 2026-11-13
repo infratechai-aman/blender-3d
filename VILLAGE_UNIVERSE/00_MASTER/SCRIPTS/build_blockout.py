@@ -23,6 +23,7 @@ sys.path.insert(0, SCRIPT_DIR)
 import numpy as np  # noqa: E402
 
 import config_layout as C  # noqa: E402
+import geo  # noqa: E402
 from bld_meshes import OBJECT_PREFIX, MeshBuilder, build_plot_mesh  # noqa: E402
 from geo import OBB, Path2D, river_distance, river_path, terrain_height  # noqa: E402
 from layout_solver import LayoutSolver  # noqa: E402
@@ -259,6 +260,8 @@ def build_backdrop(M):
              + 0.10 * np.sin(X * 0.017 + Y * 0.011))
     rise = np.clip(dout / 1300.0, 0.0, 1.0) ** 1.4
     Z = base + rise * (40.0 + 140.0 * north) * ridge
+    if geo.MASSIF is not None:                      # bury the massif's sides/back in the outer ring too
+        Z = geo.massif_shape(X.ravel(), Y.ravel(), Z.ravel()).reshape(Z.shape)
     inside = (X > x0) & (X < x1) & (Y > y0) & (Y < y1)
     edge = (X >= x0) & (X <= x1) & (Y >= y0) & (Y <= y1) & ~inside
     Z[inside] = -9.0

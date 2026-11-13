@@ -1,15 +1,27 @@
-Build 2026-11-13 00:22  (v001)
+Build 2026-11-13 02:55  (v001)
 Scene: metric 1 BU = 1 m, EEVEE review renders, view transform AgX
+Massif heightfield 93x65, peak 258 m (library-local)
 Plot mix: {'temple': 1, 'panchayat': 1, 'school': 1, 'house_rich': 2, 'shop': 9, 'shop_2storey': 2, 'house_common': 17, 'house_middle': 5, 'house_small': 8, 'cattle_shed': 3, 'grain_store': 1}
-Terrain: 1600 x 2000 m, 128721 verts, height -3.9..109.3 m
-River: closed water body 2132 m
+Terrain: 1600 x 2000 m, 128721 verts, height -3.6..108.5 m
+River: closed water body 1922 m
 Bridge v002 placed on R04 t=124, end-offset correction 0.79 m
 Ghat placed below the temple
 Roads: UV-mapped ribbons; R04 cut for the bridge between t=88..159
 Entrance gate on R01 at t=560 m
+Baked VEG_Tree_Mango_A_LOD1_BAKED: 94258 polys, 3 materials
+Baked VEG_Tree_Neem_A_LOD1_BAKED: 319668 polys, 3 materials
+Baked VEG_Tree_Palm_A_LOD1_BAKED: 5248 polys, 4 materials
+Baked VEG_Tree_Amaltas_A_LOD1_BAKED: 132042 polys, 3 materials
+Baked VEG_Tree_Peepal_A_LOD1_BAKED: 74256 polys, 3 materials
+Baked AST_Shrub_Lantana_A_BAKED: 102338 polys, 3 materials
+Baked AST_Shrub_Dense_A_BAKED: 61312 polys, 2 materials
+Baked AST_Shrub_Dry_A_BAKED: 15288 polys, 2 materials
 Buildings: 50 plots (17 hero houses, 3 tabelas, rest production-material massing)
-Fields: 271 patches from 300 candidate cells
-Vegetation: 420 tree instances (4 prototypes) + banyan + peepal
+Fields v2: 234 crop fields, 4 tubewell yards, 575 bund segments (21.6 km)
+Farm detail: hero field (95, 276) mustard; Haystack 32, Machaan 8, Scarecrow 15, Tubewell 4
+Vegetation: 1600 tree instances (4 prototypes) + banyan + peepal
 Props: Banana 11, Bougainvillea 7, Drum 8, HandPump 4, Haystack 15, Hibiscus 10, LampPost 17, Planter 51, StreetLight 19, WallLantern 17, YardPlant 8
-Mountains + waterfall placed at (150, 1180, 33.7)
-Checkpoint: previous master archived to MASTER_WORLD_20261113_002242.blend
+Vegetation v2: +1121 trees (159 avenue, 338 orchard, rest bund/valley/yard); 6 base trees cleared from views; Mango 410, Neem 486, Palm 111, Peepal 114
+Ground cover: Dense 624, Dry 625, GrassTufts 36958, Kans 473, Lantana 304
+Mountains + waterfall placed at (149, 900, -4.5); 2200 massif trees on baked meshes
+Checkpoint: previous master archived to MASTER_WORLD_20261113_025501.blend

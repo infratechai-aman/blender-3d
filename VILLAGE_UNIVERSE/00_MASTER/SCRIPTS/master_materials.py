@@ -34,10 +34,23 @@ def terrain_master():
     # rock on steep / high ground
     geo = t.n("ShaderNodeNewGeometry")
     nz = t.n("ShaderNodeSeparateXYZ", Vector=geo.outputs["Normal"]).outputs["Z"]
-    steep = t.n("ShaderNodeMapRange", Value=nz, **{"From Min": 0.8, "From Max": 0.92, "To Min": 1.0, "To Max": 0.0}).outputs["Result"]
-    hi = t.n("ShaderNodeMapRange", Value=z, **{"From Min": 30.0, "From Max": 90.0, "To Min": 0.0, "To Max": 0.6}).outputs["Result"]
+    steep = t.n("ShaderNodeMapRange", Value=nz, **{"From Min": 0.72, "From Max": 0.84, "To Min": 1.0, "To Max": 0.0}).outputs["Result"]
+    hi = t.n("ShaderNodeMapRange", Value=z, **{"From Min": 140.0, "From Max": 220.0, "To Min": 0.0, "To Max": 0.5}).outputs["Result"]
     rock = t.ramp(mid.outputs["Fac"], [(0.3, hex_lin("#7E6A58")), (0.7, hex_lin("#A88A6C"))])
     col = t.mix(t.math("MAXIMUM", t.math("MULTIPLY", steep, t.math("SUBTRACT", 1.0, bmask)), hi), col, rock)
+    # B5: sun-dried patches, wildflower speckles (yellow / white / violet) in the grass, darker clover clumps
+    dry = t.noise(obj, 0.05, 4.0, 0.6)
+    dm = t.ramp(dry.outputs["Fac"], [(0.58, (0, 0, 0, 1)), (0.7, (0.6, 0.6, 0.6, 1))])
+    grass_only = t.math("SUBTRACT", 1.0, bmask)
+    col = t.mix(t.math("MULTIPLY", t.n("ShaderNodeSeparateColor", Color=dm).outputs[0], grass_only), col, hex_lin("#B59E62"))
+    for k, (scale, hexc, thr) in enumerate(((14.0, "#E8C33A", 0.03), (11.0, "#F1EEE2", 0.025), (9.0, "#9A6BB8", 0.02))):
+        fv = t.n("ShaderNodeTexVoronoi", Vector=obj, Scale=scale)
+        fl = t.math("LESS_THAN", fv.outputs["Distance"], thr)
+        patchy = t.math("GREATER_THAN", big.outputs["Fac"], 0.45 + 0.04 * k)
+        col = t.mix(t.math("MULTIPLY", t.math("MULTIPLY", fl, patchy), grass_only), col, hex_lin(hexc))
+    clover = t.noise(obj, 0.6, 3.0, 0.6)
+    cm = t.ramp(clover.outputs["Fac"], [(0.62, (0, 0, 0, 1)), (0.72, (0.5, 0.5, 0.5, 1))])
+    col = t.mix(t.math("MULTIPLY", t.n("ShaderNodeSeparateColor", Color=cm).outputs[0], grass_only), col, hex_lin("#4A6A2C"))
     rough = t.n("ShaderNodeMapRange", Value=bank, **{"From Min": 0.3, "From Max": 0.5, "To Min": 0.4, "To Max": 0.93}).outputs["Result"]
     t.finish(col, rough, t.bump(fine.outputs["Fac"], 0.35, 0.04))
     return m
@@ -86,7 +99,11 @@ def road_dirt(name, base="#A88D69", grass_mid=False):
                **{"From Min": 0.38, "From Max": 0.5, "To Min": 0.0, "To Max": 0.8}).outputs["Result"]
     col = t.mix(t.math("MULTIPLY", edge, n.outputs["Fac"]), col, hex_lin("#7A8848"))
     fine = t.noise(obj, 12.0, 8.0, 0.7)
-    t.finish(col, 0.95, t.bump(t.math("ADD", fine.outputs["Fac"], t.math("MULTIPLY", ruts, -0.5)), 0.45, 0.03))
+    # B5: scattered pebbles/kankar
+    pv = t.n("ShaderNodeTexVoronoi", Vector=obj, Scale=18.0)
+    peb = t.math("LESS_THAN", pv.outputs["Distance"], 0.12)
+    col = t.mix(t.math("MULTIPLY", peb, 0.55), col, hex_lin("#C2AE8C"))
+    t.finish(col, 0.95, t.bump(t.math("ADD", t.math("ADD", fine.outputs["Fac"], t.math("MULTIPLY", ruts, -0.5)), t.math("MULTIPLY", peb, 0.6)), 0.45, 0.03))
     return m
 
 
